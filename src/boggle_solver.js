@@ -1,148 +1,193 @@
-class TrieNode {
-  constructor(parent, letter) {
-    this.parent = parent;
+// Grid nodes that represent nodes in the grid provided.
+class gridNode {
+  constructor(row, col, letter) {
+    this.visited = false;
+    this.indices = [row, col];
     this.letter = letter;
-    this.children = new Array(26);
-    this.isValidWord = false;
-    if (parent !== undefined) {
-      parent.children[letter.charCodeAt(0) - 97] = this;
-    }
+    this.adjacencyList = [];
+  }
+  addAdjacentIndex(row, col) {
+    this.adjacencyList.push([row, col]);
   }
 }
 
-class Boggle {
-  constructor(grid, dict) {
-    this.grid = grid;
-    this.dict = dict;
-  }
+// Returns a list that contains the grid nodes and their adjacency lists.
+function generateAdjacencyLists(width, height, grid) {
+  var adjacencyLists = [];
+  for (var row = 0; row < width; row++) {
+    for (var col = 0; col < height; col++) {
+      var newNode = new gridNode(row, col, grid[row][col]);
 
-  boggleSolver() {
-    var trie = this.makeTrie(this.dict);
-    var queue = [];
-    var words = new Set();
-    //  Parse the grid
-    for (var i = 0; i < this.grid.length; i++) {
-      for (var j = 0; j < this.grid[0].length; j++) {
-        var entry = this.grid[i][j];
-        if (entry.length === 1) {
-          var node = trie.children[entry.charCodeAt(0) - 97];
-          if (node !== undefined) {
-            queue.push([i, j, entry, node, [[i, j]]]);
-          }
-        } else if (entry.length > 1) {
-          //  Multi letter entry
-          var curr = trie.children[entry.charCodeAt(0) - 97];
-          if (curr !== undefined) {
-            let counter = 1;
-            let valid = false;
-            while (counter < entry.length) {
-              var node = curr.children[entry.charCodeAt(counter) - 97];
-              if (node === undefined) {
-                valid = false;
-                break;
-              }
-              counter++;
-              var prev = curr;
-              curr = curr.children[entry.charCodeAt(counter) - 97];
-              valid = true;
-            }
-            if (valid) {
-              var lowestNode =
-                prev.children[entry.charCodeAt(entry.length - 1) - 97];
-              queue.push([i, j, entry, lowestNode, [[i, j]]]);
-            }
-          }
-        }
+      if (row > 0) {
+        newNode.addAdjacentIndex(row - 1, col);
       }
-    }
-    while (queue.length !== 0) {
-      var [x, y, s, node, h] = queue.pop();
-      for (let [dx, dy] of [
-        [1, 0],
-        [1, -1],
-        [0, -1],
-        [-1, -1],
-        [-1, 0],
-        [-1, 1],
-        [0, 1],
-        [1, 1]
-      ]) {
-        var [x2, y2] = [x + dx, y + dy];
-        if (
-          h.find(function(element) {
-            return element[0] === x2 && element[1] === y2;
-          }) !== undefined
-        ) {
-          continue;
-        }
-        if (
-          0 <= x2 &&
-          x2 < this.grid[0].length &&
-          0 <= y2 &&
-          y2 < this.grid.length
-        ) {
-          var updatedHistory = h.slice();
-          updatedHistory.push([x2, y2]);
-          var s2 = s + this.grid[x2][y2];
-          if (this.grid[x2][y2].length > 1) {
-            var characters = Array.from(this.grid[x2][y2]);
-            var curr = node;
-            var found = false;
-            for (let char of characters) {
-              if (curr.children[char.charCodeAt(0) - 97] !== undefined) {
-                curr = curr.children[char.charCodeAt(0) - 97];
-                found = true;
-              } else {
-                found = false;
-              }
-            }
-            if (found) {
-              if (curr.isValidWord) {
-                if (s2.length > 2) {
-                  words.add(s2);
-                }
-              }
-              queue.push([x2, y2, s2, curr, updatedHistory]);
-            }
-          } else {
-            var node2 = node.children[this.grid[x2][y2].charCodeAt(0) - 97];
-            if (node2 !== undefined) {
-              if (node2.isValidWord) {
-                if (s2.length > 2) {
-                  words.add(s2);
-                }
-              }
-              queue.push([x2, y2, s2, node2, updatedHistory]);
-            }
-          }
-        }
+      if (row < width - 1) {
+        newNode.addAdjacentIndex(row + 1, col);
       }
+      if (col > 0) {
+        newNode.addAdjacentIndex(row, col - 1);
+      }
+      if (col < height - 1) {
+        newNode.addAdjacentIndex(row, col + 1);
+      }
+      if (row > 0 && col > 0) {
+        newNode.addAdjacentIndex(row - 1, col - 1);
+      }
+      if (row > 0 && col < height - 1) {
+        newNode.addAdjacentIndex(row - 1, col + 1);
+      }
+      if (row < width - 1 && col > 0) {
+        newNode.addAdjacentIndex(row + 1, col - 1);
+      }
+      if (row < width - 1 && col < height - 1) {
+        newNode.addAdjacentIndex(row + 1, col + 1);
+      }
+
+      adjacencyLists.push(newNode);
     }
-    return words.values();
   }
+  return adjacencyLists;
 }
 
-Boggle.prototype.makeTrie = function(dict) {
-  var root = new TrieNode(undefined, '');
-  for (let word of dict.values()) {
-    var current = root;
-    for (var i = 0; i < word.length; i++) {
-      let order = word.charCodeAt(i);
-      let char = word[i];
-      if (97 <= order < 123) {
-        var next = current.children[order - 97];
-        if (next === undefined) {
-          next = new TrieNode(current, char);
+// Verifies whether the word provided can be found in the grid.
+function verifyWord(adjacencyList, word, wordIndex, gridNodes) {
+  if (wordIndex >= word.length) {
+    return true;
+  }
+
+  // Checks whether all nodes have been visited or not.
+  var listExhausted = true;
+  for (let nodeIndex = 0; nodeIndex < gridNodes.length; nodeIndex++) {
+    if (gridNodes[nodeIndex].visited === false) {
+      listExhausted = false;
+      break;
+    }
+  }
+  if (listExhausted) {
+    return false;
+  }
+
+  // This part of the code checks whether the current character of the word matches any of the nodes in the nodelist that is adjacent to the current node. Then, repeats recursively.
+  var wordFound = false;
+  for (
+    var adjacentNodeIndex = 0;
+    adjacentNodeIndex < adjacencyList.length;
+    adjacentNodeIndex++
+  ) {
+    for (
+      var gridNodeIndex = 0;
+      gridNodeIndex < gridNodes.length;
+      gridNodeIndex++
+    ) {
+      // The following if statement is to check whether the current grid node is indeed the adjacent node that is currently being processed.
+      // This is done by checking the indices of both nodes (at both row index and column index).
+      if (
+        adjacencyList[adjacentNodeIndex][0] ===
+          gridNodes[gridNodeIndex].indices[0] &&
+        adjacencyList[adjacentNodeIndex][1] ===
+          gridNodes[gridNodeIndex].indices[1]
+      ) {
+        var indexToAdd = 0;
+        var isEqual = true;
+        for (
+          var nodeLetterIndex = 0;
+          nodeLetterIndex < gridNodes[gridNodeIndex].letter.length;
+          nodeLetterIndex++
+        ) {
+          if (
+            word.charAt(wordIndex + indexToAdd).toUpperCase() !==
+            gridNodes[gridNodeIndex].letter
+              .charAt(nodeLetterIndex)
+              .toUpperCase()
+          ) {
+            isEqual = false;
+          }
+          indexToAdd += 1;
         }
-        current = next;
+
+        if (gridNodes[gridNodeIndex].visited === false && isEqual) {
+          gridNodes[gridNodeIndex].visited = true;
+          wordFound =
+            wordFound ||
+            verifyWord(
+              gridNodes[gridNodeIndex].adjacencyList,
+              word,
+              wordIndex + indexToAdd,
+              gridNodes
+            );
+          gridNodes[gridNodeIndex].visited = false;
+        }
       }
     }
-    current.isValidWord = true;
   }
-  return root;
-};
+  return wordFound;
+}
 
-export const findAllSolutions = (grid, dict) => {
-  var boggle = new Boggle(grid, dict);
-  return boggle.boggleSolver();
+// This function finds all dictionary words that exist in the grid.
+export const findAllSolutions = (grid, dictionary) => {
+  var foundWords = [];
+  // Check for invalid inputs.
+  if (!grid || !dictionary) {
+    return foundWords;
+  }
+
+  if (grid.length === 0 || grid[0].length === 0) {
+    return foundWords;
+  }
+
+  // Check for inconsistent column numbers within grid.
+  var colNum = grid[0].length;
+  for (var row = 1; row < grid.length; row++) {
+    if (grid[row].length !== colNum) {
+      return foundWords;
+    }
+  }
+
+  // Generate adjacency lists for all grid nodes.
+  var gridNodes = generateAdjacencyLists(grid.length, grid[0].length, grid);
+
+  for (var wordIndex = 0; wordIndex < dictionary.length; wordIndex++) {
+    // Only check for word if length is >= 3.
+    if (dictionary[wordIndex].length < 3) {
+      continue;
+    }
+
+    // Check for the first word character match before moving onto the recursive function to check the word match.
+    for (
+      var gridNodeIndex = 0;
+      gridNodeIndex < gridNodes.length;
+      gridNodeIndex++
+    ) {
+      var indexToAdd = 0;
+      var isEqual = true;
+      for (
+        var nodeLetterIndex = 0;
+        nodeLetterIndex < gridNodes[gridNodeIndex].letter.length;
+        nodeLetterIndex++
+      ) {
+        if (
+          dictionary[wordIndex].charAt(0 + indexToAdd).toUpperCase() !==
+          gridNodes[gridNodeIndex].letter.charAt(nodeLetterIndex).toUpperCase()
+        ) {
+          isEqual = false;
+        }
+        indexToAdd += 1;
+      }
+      if (isEqual) {
+        gridNodes[gridNodeIndex].visited = true;
+        if (
+          verifyWord(
+            gridNodes[gridNodeIndex].adjacencyList,
+            dictionary[wordIndex],
+            0 + indexToAdd,
+            gridNodes
+          )
+        ) {
+          foundWords.push(dictionary[wordIndex]);
+        }
+        gridNodes[gridNodeIndex].visited = false;
+      }
+    }
+  }
+  return foundWords;
 };

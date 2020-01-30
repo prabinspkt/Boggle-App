@@ -4,14 +4,7 @@ import RandomGrid from './create_random_grid.js';
 import { findAllSolutions } from './boggle_solver';
 import { Button, Card, ButtonToolbar } from 'react-bootstrap';
 import 'bootstrap/dist/css/bootstrap.min.css';
-import { fs } from 'fs';
-
-function parseStrings() {
-  fs.readFile('full-wordlist.json', (err, data) => {
-    if (err) throw err;
-    return data.toString();
-  });
-}
+import all_words from './full-wordlist';
 
 class PrintGrid extends React.Component {
   render() {
@@ -87,6 +80,7 @@ class GamePlay extends React.Component {
     super(props);
     this.state = {
       grid: this.props.random_grid,
+      grid_solutions: this.props.random_grid_solutions,
       input_word: '',
       valid_words: [],
       invalid_words: [],
@@ -109,18 +103,17 @@ class GamePlay extends React.Component {
   handleSubmit(event) {
     event.preventDefault();
 
-    let input_word = this.state.input_word.toUpperCase();
-    let word_set = new Set([input_word]);
-    const validated_word = findAllSolutions(this.state.grid, word_set);
-    var validated_set = new Set(validated_word);
-    console.log('The solver has returned set ', validated_set);
-    if (validated_set.size > 0) {
+    let input_word = this.state.input_word.toLowerCase();
+    if (this.state.grid_solutions.has(input_word)) {
       if (this.state.valid_words.includes(this.state.input_word)) {
         alert('The word has already been found.');
       } else {
         var new_valid_words = this.state.valid_words;
         new_valid_words.push(this.state.input_word);
         this.setState({ valid_words: new_valid_words });
+        var remaining_words = this.state.grid_solutions;
+        remaining_words.delete(this.state.input_word);
+        this.setState({ grid_solutions: remaining_words });
       }
     } else {
       alert('The word is not valid.');
@@ -185,6 +178,10 @@ class GamePlay extends React.Component {
             print_words={this.state.invalid_words}
             valid_invalid={'Invalid'}
           />
+          <PrintList
+            print_words={Array.from(this.state.grid_solutions)}
+            valid_invalid={'Remaining correct'}
+          />
         </div>
       );
     }
@@ -207,13 +204,22 @@ class Game extends React.Component {
     console.log(this.state.show_grid);
     if (this.state.show_grid) {
       const random_grid = RandomGrid();
+      var random_grid_solutions = findAllSolutions(
+        random_grid,
+        all_words.words
+      );
+      var random_grid_solutions_set = new Set(random_grid_solutions);
+      console.log('Random grid solutions: ', random_grid_solutions_set);
       console.log(random_grid);
       return (
         <div>
           <Card className="text-center">
             <Card.Header>Boggle</Card.Header>
             <Card.Body>
-              <GamePlay random_grid={random_grid} />
+              <GamePlay
+                random_grid={random_grid}
+                random_grid_solutions={random_grid_solutions_set}
+              />
             </Card.Body>
           </Card>
         </div>
