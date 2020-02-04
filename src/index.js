@@ -14,6 +14,16 @@ class PrintGrid extends React.Component {
         <Card.Body>
           <Card.Title> Make words from the grid below </Card.Title>
           <Card.Text>
+          <div class="btn-group">
+                <ButtonToolbar>
+                  <Button variant="outline-secondary">{grid_data[0][0]}</Button>
+                  <Button variant="outline-secondary">{grid_data[0][1]}</Button>
+                  <Button variant="outline-secondary">{grid_data[0][2]}</Button>
+                  <Button variant="outline-secondary">{grid_data[0][3]}</Button>
+                  <Button variant="outline-secondary">{grid_data[0][4]}</Button>
+                </ButtonToolbar>
+            </div>
+            <br />
             <div class="btn-group">
               <ButtonToolbar>
                 <Button variant="outline-secondary">{grid_data[1][0]}</Button>
