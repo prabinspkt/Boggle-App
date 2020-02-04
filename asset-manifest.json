@@ -1,14 +1,14 @@
 {
   "files": {
-    "main.js": "/Boggle-App/static/js/main.bce28bf5.chunk.js",
-    "main.js.map": "/Boggle-App/static/js/main.bce28bf5.chunk.js.map",
+    "main.js": "/Boggle-App/static/js/main.4bce0422.chunk.js",
+    "main.js.map": "/Boggle-App/static/js/main.4bce0422.chunk.js.map",
     "runtime-main.js": "/Boggle-App/static/js/runtime-main.27b29e54.js",
     "runtime-main.js.map": "/Boggle-App/static/js/runtime-main.27b29e54.js.map",
     "static/css/2.47e06e2e.chunk.css": "/Boggle-App/static/css/2.47e06e2e.chunk.css",
     "static/js/2.0059a9b7.chunk.js": "/Boggle-App/static/js/2.0059a9b7.chunk.js",
     "static/js/2.0059a9b7.chunk.js.map": "/Boggle-App/static/js/2.0059a9b7.chunk.js.map",
     "index.html": "/Boggle-App/index.html",
-    "precache-manifest.a8cc9447a229cb8c42ee3ddee3e91a03.js": "/Boggle-App/precache-manifest.a8cc9447a229cb8c42ee3ddee3e91a03.js",
+    "precache-manifest.72a1b0d11b38b4e7e7161bf35431a1b8.js": "/Boggle-App/precache-manifest.72a1b0d11b38b4e7e7161bf35431a1b8.js",
     "service-worker.js": "/Boggle-App/service-worker.js",
     "static/css/2.47e06e2e.chunk.css.map": "/Boggle-App/static/css/2.47e06e2e.chunk.css.map",
     "static/js/2.0059a9b7.chunk.js.LICENSE": "/Boggle-App/static/js/2.0059a9b7.chunk.js.LICENSE"
@@ -17,6 +17,6 @@
     "static/js/runtime-main.27b29e54.js",
     "static/css/2.47e06e2e.chunk.css",
     "static/js/2.0059a9b7.chunk.js",
-    "static/js/main.bce28bf5.chunk.js"
+    "static/js/main.4bce0422.chunk.js"
   ]
 }
